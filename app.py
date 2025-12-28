@@ -1,21 +1,32 @@
-
 import streamlit as st
 import joblib
 import numpy as np
+import pandas as pd
 
 model = joblib.load("house_price_model.pkl")
 scaler = joblib.load("scaler.pkl")
+feature_names = joblib.load("feature_names.pkl")
 
-st.title("🏠 House Price Prediction App")
-st.write("Enter house details below:")
+st.title("House Price Prediction")
 
-sqft_living = st.number_input("Sqft Living", min_value=100, max_value=20000, value=1000)
-bedrooms = st.number_input("Bedrooms", min_value=1, max_value=10, value=3)
-bathrooms = st.number_input("Bathrooms", min_value=1.0, max_value=10.0, value=2.0)
-yr_renovated = st.selectbox("Renovated? (0 = No, 1 = Yes)", [0, 1])
+sqft_living = st.number_input("Sqft Living", 100, 20000, 1000)
+bedrooms = st.number_input("Bedrooms", 1, 10, 3)
+bathrooms = st.number_input("Bathrooms", 1.0, 10.0, 2.0)
+yr_renovated = st.selectbox("Renovated?", [0, 1])
 
 if st.button("Predict Price"):
-    X_new = np.array([[sqft_living, bedrooms, bathrooms, yr_renovated]])
-    X_new_scaled = scaler.transform(X_new)
-    prediction = model.predict(X_new_scaled)[0]
-    st.success(f"Predicted House Price: ${round(prediction, 2)}")
+    X_new = pd.DataFrame(
+        np.zeros((1, len(feature_names))),
+        columns=feature_names
+    )
+
+    X_new["sqft_living"] = sqft_living
+    X_new["bedrooms"] = bedrooms
+    X_new["bathrooms"] = bathrooms
+    X_new["yr_renovated"] = yr_renovated
+
+    X_scaled = scaler.transform(X_new)
+    prediction = model.predict(X_scaled)[0]
+
+    st.success(f"Predicted Price: ${prediction:,.0f}")
+
